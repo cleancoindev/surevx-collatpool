@@ -3,14 +3,14 @@ pragma solidity ^0.6.0;
 import './CollateralPool.sol';
 
 contract SinglePoolCollat {
-    address public collateralPool;
+    address payable public collateralPoolAddress;
     uint public poolId;
     address public poolOwner;
     uint public openBalance;
     uint endDate;
 
     constructor(address _poolOwner, uint _poolId, uint _endDate) public payable {
-        collateralPool = msg.sender;
+        collateralPoolAddress = msg.sender;
         poolOwner = _poolOwner;
         poolId = _poolId;
         endDate = _endDate;
@@ -19,9 +19,36 @@ contract SinglePoolCollat {
     receive() payable external {}
     
     
-    // function marginCall() - gets collateral from pool
+    // pool events
+    event marginCallSuccess(uint amountTransferred, address cpAddress);
+    event marginCallFail(uint amountRequested, address cpAddress);
 
-    // Function reverseMarginCall() - returns collateral to pool
+    // pull ether from the collateral pool
+    function marginCall(uint amount) external validAmount(amount) {
+        CollateralPool(collateralPoolAddress).marginCall(amount); 
+        openBalance += amount;
+        
+        // emit a success event
+        emit marginCallSuccess(amount, collateralPoolAddress);
+    }
     
-    // Function unwindCollat() - returns all funds to pool
+    // reverse a margin call
+    function reverseMarginCall(uint256 amount) external validAmount(amount) {
+        collateralPoolAddress.transfer(amount);
+        openBalance -= amount;
+    }
+    
+    // return all funds to pool
+    function unwindCollat() external {
+        collateralPoolAddress.transfer(openBalance);
+        openBalance = 0;
+    }
+    
+    // check if the ETHER amount is greater than 0
+    modifier validAmount(uint amount) {
+        require(amount > 0, 'Amount should be greater than zero');
+        emit marginCallFail(amount, collateralPoolAddress);
+        _;
+    }
+    
 }
