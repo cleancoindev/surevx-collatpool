@@ -43,16 +43,20 @@ contract CollateralPool {
     //Margin calls 
     function marginCall(uint amount) public onlyLinkedCollat {
         linkedCollat.transfer(amount);
+        currentBalance += amount;
+    }
+    
+    //Withdraw funds without closing
+    function withdraw(uint _amount) public onlyOwner isOpen {
+        poolOwner.transfer(_amount);
+        currentBalance -= _amount;
     }
     
     //Closing out
-    function withdraw(uint _amount) public onlyOwner isOpen {
-        poolOwner.transfer(_amount);
-        poolStatus = Status.CLOSED;
-    }
-    
     function closeCollat() public onlyOwner isFinished {
         poolOwner.transfer(address(this).balance);
+        currentBalance = 0;
+        poolStatus = Status.CLOSED;
     }
 
     

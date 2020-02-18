@@ -6,7 +6,7 @@ contract SinglePoolCollat {
     address payable public collateralPoolAddress;
     uint public poolId;
     address public poolOwner;
-    uint public openBalance;
+    uint public currentBalance;
     uint endDate;
 
     constructor(address _poolOwner, uint _poolId, uint _endDate) public payable {
@@ -26,7 +26,7 @@ contract SinglePoolCollat {
     // pull ether from the collateral pool
     function marginCall(uint amount) external validAmount(amount) {
         CollateralPool(collateralPoolAddress).marginCall(amount); 
-        openBalance += amount;
+        currentBalance += amount;
         
         // emit a success event
         emit marginCallSuccess(amount, collateralPoolAddress);
@@ -35,13 +35,13 @@ contract SinglePoolCollat {
     // reverse a margin call
     function reverseMarginCall(uint256 amount) external validAmount(amount) {
         collateralPoolAddress.transfer(amount);
-        openBalance -= amount;
+        currentBalance -= amount;
     }
     
     // return all funds to pool
     function unwindCollat() external {
-        collateralPoolAddress.transfer(openBalance);
-        openBalance = 0;
+        collateralPoolAddress.transfer(currentBalance);
+        currentBalance = 0;
     }
     
     // check if the ETHER amount is greater than 0
