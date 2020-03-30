@@ -35,7 +35,7 @@ contract SinglePoolCollat {
     
     // Apply haircut
     function applyHaircut() internal {
-        maintenanceBal = requiredBal * (1 + haircut);
+        // TO-DO
     }
     
     // ADMIN FUNCTIONS
